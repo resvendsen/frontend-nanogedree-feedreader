@@ -56,8 +56,11 @@ h2 {
     background: #4caf50;
     height: 100%;
     width: 10em;
-    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+    transition: -webkit-transform 0.2s;
     transition: transform 0.2s;
+    transition: transform 0.2s, -webkit-transform 0.2s;
 }
 
 .slide-menu ul {
@@ -77,8 +80,11 @@ h2 {
 }
 
 .menu-hidden .slide-menu {
-    transform: translate3d(-12em, 0, 0);
+    -webkit-transform: translate3d(-12em, 0, 0);
+            transform: translate3d(-12em, 0, 0);
+    transition: -webkit-transform 0.2s;
     transition: transform 0.2s;
+    transition: transform 0.2s, -webkit-transform 0.2s;
 }
 
 .feed {
