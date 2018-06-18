@@ -11,6 +11,7 @@
 $(function() {
 
     const bodyMenuHidden = document.querySelector('body.menu-hidden');
+    const menuMoveEl = document.querySelector('.menu-icon-link');
 
     function t() {return new Date().getTime();};
 
@@ -65,7 +66,7 @@ $(function() {
          * the CSS to determine how we're performing the
          * hiding/showing of the menu element.
          */
-        const menuEl = document.querySelector('body div.slide-menu');
+        const menuEl = document.querySelector('.slide-menu');
         const menuRect = menuEl.getBoundingClientRect();
 
         it('menu default is hidden', function() {
@@ -78,8 +79,6 @@ $(function() {
          * should have two expectations: does the menu display when
          * clicked and does it hide when clicked again.
          */
-        const menuMoveEl = document.querySelector('.menu-icon-link');
-
         describe('test menu movement to the right and back', function() {
 
             const body = document.querySelector('body');
@@ -87,12 +86,6 @@ $(function() {
             // used to test for the presence of the menu-hidden class
             const hasClass = function(el, cls) {
                 return el.classList.contains(cls);
-            };
-
-            // visibility change is triggered by toggling the menu-hidden class
-            // in this case, visibility is based on the x value of the bounding rectangle
-            const isVisible = function(el) {
-                return (el.getBoundingClientRect().x >= 0);
             };
 
             // fires off a mouse event 'click' for the element passed in
@@ -109,36 +102,11 @@ $(function() {
                 el.dispatchEvent(ev);
             };
 
-            beforeEach(function(done) {
-                // simulates an async event with a timer
-                const triggerClick = function() {
-                    click(menuMoveEl);
-                    // give it time to complete
-                    setTimeout(function() {
-                        console.log(t() + ' 1 Menu Click timeout done ' + document.readyState);
-                        done();
-                    }, 1200);
-                };
-                // spy on the DOM element a.menu-icon-link which is clicked to display
-                // and rettract the menu
-                spyOn(menuMoveEl, "onclick");
-                triggerClick();
-            });
-
-            it('menu icon click displays menu', function(done) {
+            it('menu moves right and left', function() {
+                click(menuMoveEl);
                 expect(hasClass(body, 'menu-hidden')).toBe(false);
-                expect(menuMoveEl.onclick).toHaveBeenCalled();
-                expect(menuMoveEl.onclick.calls.count()).toBe(1);
-                expect(isVisible(menuEl)).toBe(true);
-                done();
-            });
-
-            it('menu icon click retracts menu', function(done) {
+                click(menuMoveEl);
                 expect(hasClass(body, 'menu-hidden')).toBe(true);
-                expect(menuMoveEl.onclick).toHaveBeenCalled();
-                expect(menuMoveEl.onclick.calls.count()).toBe(1);
-                expect(isVisible(menuEl)).toBe(false);
-                done();
             });
         });
     });
@@ -153,36 +121,21 @@ $(function() {
          */
         const feedEl = document.querySelector('.feed');
 
-        // wait for document to finish loading so it won't interfere w/ loadFeed test
-        if (document.readyState == 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log(t() + ' 2 DOMContentLoaded - current Document Ready State is ' + document.readyState);
-            });
-            // give it time to complete
-            setTimeout(function() {
-                console.log(t() + " 2 Timeout done, " + document.readyState);
-            }, 100);
-        };
-
         beforeEach(function(done) {
-            // trigger the feed load async simulation
+            // start the feed load async simulation
             const firstLoad = function() {
-                window.loadFeed(0);
                 // give it time to complete
                 setTimeout(function() {
-                    console.log(t() + ' 3 loadFeed(0) timeout done ' + document.readyState);
                     done();
-                }, 1200);
+                }, 4500);
             };
-            spyOn(window, "loadFeed");
             firstLoad();
         });
 
         it("there's at least one .entry in .feed", function(done) {
-            expect(window.loadFeed).toHaveBeenCalled();
-            expect(window.loadFeed.calls.count()).toBe(1);
             expect(feedEl).toBeDefined();
-            const feedListEl = document.querySelector('.entry-link .entry');
+            expect(feedEl.innerHTML.length).toBeGreaterThan(0);
+            const feedListEl = feedEl.querySelector('.entry-link .entry');
             expect(feedListEl.innerText.length).toBeGreaterThan(0);
             done();
         });
@@ -194,8 +147,6 @@ $(function() {
          * by the loadFeed function that the content actually changes.
          * Remember, loadFeed() is asynchronous.
          */
-
-        let originalTimeout;
         let slideMenuItem;
         let initialCount;
         let initialEntry;
@@ -214,31 +165,38 @@ $(function() {
             const ev = document.createEvent("MouseEvent");
             ev.initMouseEvent(
                 "click",
-                true, true,  /* bubble, cancelable */
+                true, true,   /* bubble, cancelable */
                 window, null,
-                0, 0, 0, 0,  /* coordinates */
-                false, false, false, false,  /* modifier keys */
+                0, 0, 0, 0,   /* coordinates */
+                false, false, false, false,   /* modifier keys */
                 0 /* left */, null
             );
             el.dispatchEvent(ev);
         };
 
+        const origTimeoutMax = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+
         beforeEach(function(done) {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
             // trigger a menu entry to see how loadFeed behaves
             const menuSelectLoad = function() {
+                // make the menu visible
                 document.querySelector('body').classList.toggle('menu-hidden');
                 const feedListEl = document.querySelector('.entry-link .entry');
                 initialEntry = feedListEl.innerHTML;
                 initialCount = feedListEl.innerHTML.length;
-                slideMenuItem = document.querySelector('a[data-id="2"]');
+                slideMenuItem = document.querySelector('a[data-id="1"]');  // CSS Tricks item
                 click(slideMenuItem);
-                // simulate async behavior   */
+                // simulate async behavior
                 setTimeout(function() {
-                    console.log(t() + ' 4 Slide Menu click timeout done ' + document.readyState);
                     done();
-                }, 1200);
+                }, 4500);
             };
             menuSelectLoad();
+        });
+
+        afterEach(function() {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = origTimeoutMax;
         });
 
         it("loadFeed actually changes the content", function(done) {
